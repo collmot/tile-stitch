@@ -208,7 +208,7 @@ int main(int argc, char **argv) {
 	int centered = 0;
 	int outfmt = OUTFMT_PNG;
 	unsigned int writeworldfile = FALSE;
-	while ((i = getopt(argc, argv, "o:t:c:f:w")) != -1) {
+	while ((i = getopt(argc, argv, "ho:t:c:f:w")) != -1) {
 		switch (i) {
 		case 'o':
 			outfile = optarg;
@@ -232,6 +232,11 @@ int main(int argc, char **argv) {
 			} else if (strcmp(optarg, "geotiff") == 0) {
 				outfmt = OUTFMT_GEOTIFF;
 			}
+			break;
+
+		case 'h':
+			usage(argv);
+			exit(EXIT_SUCCESS);
 			break;
 		}
 	}
