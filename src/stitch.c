@@ -233,9 +233,6 @@ int main(int argc, char **argv) {
 				outfmt = OUTFMT_GEOTIFF;
 			}
 			break;
-
-		default:
-			usage(argv);
 		}
 	}
 
