@@ -21,25 +21,49 @@
 #endif
 
 const char* presets[] = {
+	"gmaps",
+	"Google Maps standard road map",
+	"http://mt.google.com/vt/lyrs=m&x={x}&y={y}&z={z}",
+
 	"gmaps:satellite",
 	"Google Maps satellite imagery",
 	"http://mt.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
 
-	"mapquest",
-	"MapQuest",
-	"http://otile1.mqcdn.com/tiles/1.0.0/sat/{z}/{x}/{y}.jpg",
+	"gmaps:hybrid",
+	"Google Maps hybrid map",
+	"http://mt.google.com/vt/lyrs=y&x={x}&y={y}&z={z}",
+
+	"ocm",
+	"OpenCycleMaps tiles (watermarked)",
+	"http://tile.thunderforest.com/cycle/{z}/{x}/{y}.png",
 
 	"osm",
 	"OpenStreetMaps standard tiles",
-	"http://a.tile.openstreetmap.org/{z}/{x}/{y}.png",
+	"http://tile.openstreetmap.org/{z}/{x}/{y}.png",
+
+	"stamen:terrain",
+	"Stamen terrain tiles",
+	"http://tile.stamen.com/terrain/{z}/{x}/{y}.jpg",
 
 	"stamen:toner",
 	"Stamen toner tiles",
-	"http://b.tile.stamen.com/toner/{z}/{x}/{y}.jpg",
+	"http://tile.stamen.com/toner/{z}/{x}/{y}.png",
 
 	"stamen:watercolor",
 	"Stamen watercolor tiles",
-	"http://b.tile.stamen.com/watercolor/{z}/{x}/{y}.jpg",
+	"http://tile.stamen.com/watercolor/{z}/{x}/{y}.jpg",
+
+	"tf:landscape",
+	"Thunderforest landscape map tiles (watermarked)",
+	"http://tile.thunderforest.com/landscape/{z}/{x}/{y}.png",
+
+	"tf:outdoors",
+	"Thunderforest outdoors map tiles (watermarked)",
+	"http://tile.thunderforest.com/outdoors/{z}/{x}/{y}.png",
+
+	"tf:transport",
+	"Thunderforest transport map tiles (watermarked)",
+	"http://tile.thunderforest.com/transport/{z}/{x}/{y}.png",
 
 	0
 };
