@@ -20,9 +20,53 @@
 #	include <xtiffio.h>
 #endif
 
+const char* presets[] = {
+	"gmaps:satellite",
+	"Google Maps satellite imagery",
+	"http://mt.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
+
+	"mapquest",
+	"MapQuest",
+	"http://otile1.mqcdn.com/tiles/1.0.0/sat/{z}/{x}/{y}.jpg",
+
+	"osm",
+	"OpenStreetMaps standard tiles",
+	"http://a.tile.openstreetmap.org/{z}/{x}/{y}.png",
+
+	"stamen:toner",
+	"Stamen toner tiles",
+	"http://b.tile.stamen.com/toner/{z}/{x}/{y}.jpg",
+
+	"stamen:watercolor",
+	"Stamen watercolor tiles",
+	"http://b.tile.stamen.com/watercolor/{z}/{x}/{y}.jpg",
+
+	0
+};
+
+const char* find_preset_url(const char* name, const char* default_url) {
+	for (const char** ptr = presets; *ptr != 0; ptr += 3) {
+		if (!strcmp(ptr[0], name)) {
+			return ptr[2];
+		}
+	}
+
+	return default_url;
+}
+
+void list_presets() {
+	for (const char** ptr = presets; *ptr != 0; ptr += 3) {
+		fprintf(stderr, "    %-20s %s\n", ptr[0], ptr[1]);
+	}
+}
+
 void usage(char **argv) {
 	fprintf(stderr, "Usage: %s [-o outfile] [-f png|geotiff] minlat minlon maxlat maxlon zoom http://whatever/{z}/{x}/{y}.png ...\n", argv[0]);
 	fprintf(stderr, "Usage: %s [-o outfile] [-f png|geotiff] -c lat lon width height zoom http://whatever/{z}/{x}/{y}.png ...\n", argv[0]);
+	fprintf(stderr, "\n");
+	fprintf(stderr, "You may also use one of the following presets instead of a URL:\n");
+	fprintf(stderr, "\n");
+	list_presets();
 }
 
 // http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
@@ -347,11 +391,10 @@ int main(int argc, char **argv) {
 
 			int opt;
 			for (opt = optind + 5; opt < argc; opt++) {
-				char *url = argv[opt];
-
+				const char *url = find_preset_url(argv[opt], argv[opt]);
 				int end = strlen(url) + 50;
 				char url2[end];
-				char *cp;
+				const char *cp;
 				char *out = url2;
 
 				for (cp = url; *cp && out - url2 < end - 10; cp++) {
