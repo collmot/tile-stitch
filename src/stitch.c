@@ -1,13 +1,24 @@
+#include "config.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
 #include <unistd.h>
 #include <curl/curl.h>
-#include <jpeglib.h>
-#include <png.h>
-#include <geotiffio.h>
-#include <xtiffio.h>
+
+#if JPEG_FOUND
+#	include <jpeglib.h>
+#endif
+
+#if PNG_FOUND
+#	include <png.h>
+#endif
+
+#if GEOTIFF_FOUND
+#	include <geotiffio.h>
+#	include <xtiffio.h>
+#endif
 
 void usage(char **argv) {
 	fprintf(stderr, "Usage: %s [-o outfile] [-f png|geotiff] minlat minlon maxlat maxlon zoom http://whatever/{z}/{x}/{y}.png ...\n", argv[0]);
@@ -69,6 +80,7 @@ size_t curl_receive(char *ptr, size_t size, size_t nmemb, void *v) {
 	return size * nmemb;
 };
 
+#if JPEG_FOUND
 struct image *read_jpeg(char *s, int len) {
 	struct jpeg_decompress_struct cinfo;
 	struct jpeg_error_mgr jerr;
@@ -100,6 +112,12 @@ struct image *read_jpeg(char *s, int len) {
 
 	return i;
 }
+#else /* JPEG_FOUND */
+struct image *read_jpeg(char *s, int len) {
+	fprintf(stderr, "stitch was compiled without JPEG support, sorry\n");
+	return 0;
+}
+#endif /* JPEG_FOUND */
 
 static void fail(png_structp png_ptr, png_const_charp error_msg) {
 	fprintf(stderr, "PNG error %s\n", error_msg);
@@ -123,6 +141,7 @@ void user_read_data(png_structp png_ptr, png_bytep data, png_size_t length) {
 	state->off += length;
 }
 
+#if PNG_FOUND
 struct image *read_png(char *s, int len) {
 	png_structp png_ptr;
 	png_infop info_ptr;
@@ -172,6 +191,12 @@ struct image *read_png(char *s, int len) {
 	png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
 	return i;
 }
+#else /* PNG_FOUND */
+struct image *read_png(char *s, int len) {
+	fprintf(stderr, "stitch was compiled without PNG support, sorry\n");
+	return 0;
+}
+#endif /* PNG_FOUND */
 
 int main(int argc, char **argv) {
 	extern int optind;
@@ -379,6 +404,13 @@ int main(int argc, char **argv) {
 					continue;
 				}
 
+				if (i == 0) {
+					// error message was printed by read_png or read_jpeg already
+					free(data.buf);
+					curl_easy_cleanup(curl);
+					exit(EXIT_FAILURE);
+				}
+
 				free(data.buf);
 				curl_easy_cleanup(curl);
 
@@ -444,6 +476,7 @@ int main(int argc, char **argv) {
 	}
 
 	if (outfmt == OUTFMT_PNG) {
+#if PNG_FOUND
 		FILE *outfp = stdout;
 		if (outfile != NULL) {
 			fprintf(stderr, "Output PNG: %s\n", outfile);
@@ -478,13 +511,19 @@ int main(int argc, char **argv) {
 		if (outfile != NULL) {
 			fclose(outfp);
 		}
+#else
+		fprintf(stderr, "stitch was compiled without PNG support, sorry\n");
+		exit(EXIT_FAILURE);
+#endif
 	}
 
 	else if (outfmt == OUTFMT_GEOTIFF) {
+#if GEOTIFF_FOUND
+
 		//TODO : Handle writing to stdout if required
 
 		if (outfile != NULL) {
-			fprintf(stderr, "Output PNG: %s\n", outfile);
+			fprintf(stderr, "Output TIFF: %s\n", outfile);
 			TIFF *tif = (TIFF *) 0;  /* TIFF-level descriptor */
 			GTIF *gtif = (GTIF *) 0; /* GeoKey-level descriptor */
 
@@ -540,6 +579,11 @@ int main(int argc, char **argv) {
 			fprintf(stderr, "Can't write TIFF to stdout, sorry\n");
 			exit(EXIT_FAILURE);
 		}
+#else
+		fprintf(stderr, "stitch was compiled without GeoTIFF support, sorry\n");
+		exit(EXIT_FAILURE);
+#endif
+
 	}
 
 	//write world file

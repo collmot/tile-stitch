@@ -1,0 +1,8 @@
+#ifndef STITCH_CONFIG_H
+#define STITCH_CONFIG_H
+
+#cmakedefine GEOTIFF_FOUND 1
+#cmakedefine JPEG_FOUND 1
+#cmakedefine PNG_FOUND 1
+
+#endif

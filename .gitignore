@@ -1,0 +1,9 @@
+build/
+src/config.h
+src/Makefile
+stitch
+*.dSYM
+CMakeFiles
+CMakeCache.txt
+cmake_install.cmake
+
