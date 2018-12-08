@@ -1,0 +1,8 @@
+find_path(GEOTIFF_INCLUDE_DIR geotiffio.h PATH_SUFFIXES include)
+find_library(GEOTIFF_LIBRARY NAMES geotiff)
+set(GEOTIFF_INCLUDE_DIRS ${GEOTIFF_INCLUDE_DIR})
+set(GEOTIFF_LIBRARIES ${GEOTIFF_LIBRARY})
+
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(GEOTIFF DEFAULT_MSG GEOTIFF_LIBRARY GEOTIFF_INCLUDE_DIR)
+mark_as_advanced(GEOTIFF_INCLUDE_DIR GEOTIFF_LIBRARY)
