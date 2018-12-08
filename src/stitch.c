@@ -251,10 +251,23 @@ int main(int argc, char **argv) {
 	double maxlat = atof(argv[optind + 2]);
 	double maxlon = atof(argv[optind + 3]);
 	int zoom = atoi(argv[optind + 4]);
+	double dummy;
 
 	if (zoom < 0) {
 		fprintf(stderr, "Zoom %u less than 0\n", zoom);
 		exit(EXIT_FAILURE);
+	}
+
+	if (minlat > maxlat) {
+		dummy = minlat;
+		minlat = maxlat;
+		maxlat = dummy;
+	}
+
+	if (minlon > maxlon) {
+		dummy = minlon;
+		minlon = maxlon;
+		maxlon = dummy;
 	}
 
 	if (outfile == NULL && isatty(1)) {
