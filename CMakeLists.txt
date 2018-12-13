@@ -37,13 +37,17 @@ configure_file(
 
 # Declare final target
 add_executable(stitch src/stitch.c)
-target_include_directories(stitch
-	PRIVATE
-	  ${CMAKE_CURRENT_BINARY_DIR}/src
-		${CURL_INCLUDE_DIRS} ${PNG_INCLUDE_DIRS} ${JPEG_INCLUDE_DIRS}
-		${TIFF_INCLUDE_DIRS} ${GEOTIFF_INCLUDE_DIRS}
-)
-target_link_libraries(stitch
-	${CURL_LIBRARIES} ${JPEG_LIBRARIES} ${PNG_LIBRARIES}
-	${TIFF_LIBRARIES} ${GEOTIFF_LIBRARIES}
-)
+target_include_directories(stitch PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src ${CURL_INCLUDE_DIRS})
+target_link_libraries(stitch m ${CURL_LIBRARIES})
+if(JPEG_FOUND)
+  target_include_directories(stitch PRIVATE ${JPEG_INCLUDE_DIRS})
+  target_link_libraries(stitch ${JPEG_LIBRARIES})
+endif(JPEG_FOUND)
+if(PNG_FOUND)
+  target_include_directories(stitch PRIVATE ${PNG_INCLUDE_DIRS})
+  target_link_libraries(stitch ${PNG_LIBRARIES})
+endif(PNG_FOUND)
+if(GEOTIFF_FOUND)
+  target_include_directories(stitch PRIVATE ${GEOTIFF_INCLUDE_DIRS} ${TIFF_INCLUDE_DIRS})
+  target_link_libraries(stitch ${GEOTIFF_LIBRARIES} ${TIFF_LIBRARIES})
+endif(GEOTIFF_FOUND)
