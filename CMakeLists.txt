@@ -14,6 +14,9 @@ if(PREFER_STATIC_LIBRARIES)
 	else(WIN32)
 		set(CMAKE_FIND_LIBRARY_SUFFIXES .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
 	endif(WIN32)
+	if(NOT APPLE)
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -static")
+	endif(NOT APPLE)
 endif(PREFER_STATIC_LIBRARIES)
 
 # Find all the required dependencies
