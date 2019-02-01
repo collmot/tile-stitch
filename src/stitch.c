@@ -21,6 +21,14 @@
 #endif
 
 const char* presets[] = {
+	"aws:terrarium",
+	"Amazon AWS open elevation map (Terrarium format)",
+	"https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png",
+
+	"aws:normal",
+	"Amazon AWS open elevation map (normal vector format)",
+	"https://s3.amazonaws.com/elevation-tiles-prod/normal/{z}/{x}/{y}.png",
+
 	"gmaps",
 	"Google Maps standard road map",
 	"http://mt.google.com/vt/lyrs=m&x={x}&y={y}&z={z}",
@@ -85,8 +93,8 @@ void list_presets() {
 }
 
 void usage(char **argv) {
-	fprintf(stderr, "Usage: %s [-o outfile] [-f png|geotiff] minlat minlon maxlat maxlon zoom http://whatever/{z}/{x}/{y}.png ...\n", argv[0]);
-	fprintf(stderr, "Usage: %s [-o outfile] [-f png|geotiff] -c lat lon width height zoom http://whatever/{z}/{x}/{y}.png ...\n", argv[0]);
+	fprintf(stderr, "Usage: %s [-o outfile] [-f png|geotiff] [-e] minlat minlon maxlat maxlon zoom http://whatever/{z}/{x}/{y}.png ...\n", argv[0]);
+	fprintf(stderr, "Usage: %s [-o outfile] [-f png|geotiff] [-e] -c lat lon width height zoom http://whatever/{z}/{x}/{y}.png ...\n", argv[0]);
 	fprintf(stderr, "\n");
 	fprintf(stderr, "You may also use one of the following presets instead of a URL:\n");
 	fprintf(stderr, "\n");
@@ -274,10 +282,19 @@ int main(int argc, char **argv) {
 	char *outfile = NULL;
 	int tilesize = 256;
 	int centered = 0;
+	int elevation = 0;
 	int outfmt = OUTFMT_PNG;
+	int x, y;
 	unsigned int writeworldfile = FALSE;
-	while ((i = getopt(argc, argv, "ho:t:c:f:w")) != -1) {
+	unsigned long long int offset, ioffset;
+	uint32_t min_elevation, max_elevation, pixel_elevation;
+
+	while ((i = getopt(argc, argv, "eho:t:c:f:w")) != -1) {
 		switch (i) {
+		case 'e':
+			elevation = 1;
+			break;
+
 		case 'o':
 			outfile = optarg;
 			break;
@@ -501,7 +518,6 @@ int main(int argc, char **argv) {
 					exit(EXIT_FAILURE);
 				}
 
-				int x, y;
 				for (y = 0; y < i->height; y++) {
 					for (x = 0; x < i->width; x++) {
 						int xd = x + xoff;
@@ -511,16 +527,19 @@ int main(int argc, char **argv) {
 							continue;
 						}
 
-						if (i->depth == 4) {
-							double as = buf[((y + yoff) * width + x + xoff) * 4 + 3] / 255.0;
-							double rs = buf[((y + yoff) * width + x + xoff) * 4 + 0] / 255.0 * as;
-							double gs = buf[((y + yoff) * width + x + xoff) * 4 + 1] / 255.0 * as;
-							double bs = buf[((y + yoff) * width + x + xoff) * 4 + 2] / 255.0 * as;
+						offset = ((y + yoff) * width + x + xoff) * 4;
+						ioffset = (y * i->width + x) * i->depth;
 
-							double ad = i->buf[(y * i->width + x) * 4 + 3] / 255.0;
-							double rd = i->buf[(y * i->width + x) * 4 + 0] / 255.0 * ad;
-							double gd = i->buf[(y * i->width + x) * 4 + 1] / 255.0 * ad;
-							double bd = i->buf[(y * i->width + x) * 4 + 2] / 255.0 * ad;
+						if (i->depth == 4) {
+							double as = buf[offset + 3] / 255.0;
+							double rs = buf[offset + 0] / 255.0 * as;
+							double gs = buf[offset + 1] / 255.0 * as;
+							double bs = buf[offset * 4 + 2] / 255.0 * as;
+
+							double ad = i->buf[ioffset + 3] / 255.0;
+							double rd = i->buf[ioffset + 0] / 255.0 * ad;
+							double gd = i->buf[ioffset + 1] / 255.0 * ad;
+							double bd = i->buf[ioffset + 2] / 255.0 * ad;
 
 							// https://code.google.com/p/pulpcore/wiki/TutorialBlendModes
 							double ar = as * (1 - ad) + ad;
@@ -528,20 +547,20 @@ int main(int argc, char **argv) {
 							double gr = gs * (1 - ad) + gd;
 							double br = bs * (1 - ad) + bd;
 
-							buf[((y + yoff) * width + x + xoff) * 4 + 3] = ar * 255.0;
-							buf[((y + yoff) * width + x + xoff) * 4 + 0] = rr / ar * 255.0;
-							buf[((y + yoff) * width + x + xoff) * 4 + 1] = gr / ar * 255.0;
-							buf[((y + yoff) * width + x + xoff) * 4 + 2] = br / ar * 255.0;
+							buf[offset + 3] = ar * 255.0;
+							buf[offset + 0] = rr / ar * 255.0;
+							buf[offset + 1] = gr / ar * 255.0;
+							buf[offset + 2] = br / ar * 255.0;
 						} else if (i->depth == 3) {
-							buf[((y + yoff) * width + x + xoff) * 4 + 0] = i->buf[(y * i->width + x) * 3 + 0];
-							buf[((y + yoff) * width + x + xoff) * 4 + 1] = i->buf[(y * i->width + x) * 3 + 1];
-							buf[((y + yoff) * width + x + xoff) * 4 + 2] = i->buf[(y * i->width + x) * 3 + 2];
-							buf[((y + yoff) * width + x + xoff) * 4 + 3] = 255;
+							buf[offset + 0] = i->buf[ioffset + 0];
+							buf[offset + 1] = i->buf[ioffset + 1];
+							buf[offset + 2] = i->buf[ioffset + 2];
+							buf[offset + 3] = 255;
 						} else {
-							buf[((y + yoff) * width + x + xoff) * 4 + 0] = i->buf[(y * i->width + x) * i->depth + 0];
-							buf[((y + yoff) * width + x + xoff) * 4 + 1] = i->buf[(y * i->width + x) * i->depth + 0];
-							buf[((y + yoff) * width + x + xoff) * 4 + 2] = i->buf[(y * i->width + x) * i->depth + 0];
-							buf[((y + yoff) * width + x + xoff) * 4 + 3] = 255;
+							buf[offset + 0] = i->buf[ioffset + 0];
+							buf[offset + 1] = i->buf[ioffset + 0];
+							buf[offset + 2] = i->buf[ioffset + 0];
+							buf[offset + 3] = 255;
 						}
 					}
 				}
@@ -555,6 +574,39 @@ int main(int argc, char **argv) {
 	unsigned char *rows[height];
 	for (i = 0; i < height; i++) {
 		rows[i] = buf + i * (4 * width);
+	}
+
+	if (elevation) {
+		double ratio;
+
+		min_elevation = 0xFFFFFFUL;
+		max_elevation = 0;
+
+		for (y = 0, offset = 0; y < height; y++) {
+			for (x = 0; x < width; x++, offset += 4) {
+				pixel_elevation = (buf[offset] << 16) + (buf[offset+1] << 8) + buf[offset+2];
+				if (min_elevation > pixel_elevation) {
+					min_elevation = pixel_elevation;
+				}
+				if (max_elevation < pixel_elevation) {
+					max_elevation = pixel_elevation;
+				}
+			}
+		}
+
+		if (max_elevation > min_elevation) {
+			ratio = 255.0 / (max_elevation - min_elevation);
+		} else {
+			ratio = 1;
+		}
+
+		for (y = 0, offset = 0; y < height; y++) {
+			for (x = 0; x < width; x++, offset += 4) {
+				pixel_elevation = (buf[offset] << 16) + (buf[offset+1] << 8) + buf[offset+2];
+				buf[offset] = buf[offset + 1] = buf[offset + 2] =
+					round((pixel_elevation - min_elevation) * ratio);
+			}
+		}
 	}
 
 	if (outfmt == OUTFMT_PNG) {
