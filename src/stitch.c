@@ -287,7 +287,6 @@ int main(int argc, char **argv) {
 	int x, y;
 	unsigned int writeworldfile = FALSE;
 	unsigned long long int offset, ioffset;
-	uint32_t min_elevation, max_elevation, pixel_elevation;
 
 	while ((i = getopt(argc, argv, "eho:t:c:f:w")) != -1) {
 		switch (i) {
@@ -578,11 +577,16 @@ int main(int argc, char **argv) {
 
 	if (elevation) {
 		double ratio;
+		double avg_elevation;
+		uint32_t min_elevation, max_elevation, pixel_elevation;
+		uint32_t counter;
 
 		min_elevation = 0xFFFFFFUL;
 		max_elevation = 0;
+		avg_elevation = 0;
+		counter = 0;
 
-		for (y = 0, offset = 0; y < height; y++) {
+		for (y = 0, offset = 0, counter = 0; y < height; y++) {
 			for (x = 0; x < width; x++, offset += 4) {
 				pixel_elevation = (buf[offset] << 16) + (buf[offset+1] << 8) + buf[offset+2];
 				if (min_elevation > pixel_elevation) {
@@ -591,14 +595,23 @@ int main(int argc, char **argv) {
 				if (max_elevation < pixel_elevation) {
 					max_elevation = pixel_elevation;
 				}
+
+				counter++;
+				avg_elevation += (pixel_elevation - avg_elevation) / counter;
 			}
 		}
+
+		fprintf(stderr, "==Elevation range: [%lu; %lu]\n",
+			(unsigned long) min_elevation, (unsigned long) max_elevation);
+		fprintf(stderr, "==Average elevation: %.4f\n", avg_elevation);
 
 		if (max_elevation > min_elevation) {
 			ratio = 255.0 / (max_elevation - min_elevation);
 		} else {
 			ratio = 1;
 		}
+
+		fprintf(stderr, "==Midpoint: %.4f\n", (avg_elevation - min_elevation) * ratio);
 
 		for (y = 0, offset = 0; y < height; y++) {
 			for (x = 0; x < width; x++, offset += 4) {
