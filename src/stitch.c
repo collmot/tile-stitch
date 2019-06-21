@@ -601,9 +601,12 @@ int main(int argc, char **argv) {
 			}
 		}
 
-		fprintf(stderr, "==Elevation range: [%lu; %lu]\n",
-			(unsigned long) min_elevation, (unsigned long) max_elevation);
-		fprintf(stderr, "==Average elevation: %.4f\n", avg_elevation);
+		fprintf(stderr, "==Elevation range: [%.4f; %.4f] --> %.4f\n",
+			min_elevation / 256.0 - 32768, max_elevation / 256.0 - 32768,
+			(max_elevation - min_elevation) / 256.0
+		);
+		fprintf(stderr, "==Average elevation: %.4f\n",
+			avg_elevation / 256.0 - 32768);
 
 		if (max_elevation > min_elevation) {
 			ratio = 255.0 / (max_elevation - min_elevation);
@@ -611,7 +614,7 @@ int main(int argc, char **argv) {
 			ratio = 1;
 		}
 
-		fprintf(stderr, "==Midpoint: %.4f\n", (avg_elevation - min_elevation) * ratio);
+		fprintf(stderr, "==Midpoint in [0; 1] range: %.4f\n", (avg_elevation - min_elevation) * ratio / 255);
 
 		for (y = 0, offset = 0; y < height; y++) {
 			for (x = 0; x < width; x++, offset += 4) {
