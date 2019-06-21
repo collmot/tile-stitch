@@ -20,75 +20,160 @@
 #	include <xtiffio.h>
 #endif
 
-const char* presets[] = {
-	"aws:terrarium",
-	"Amazon AWS open elevation map (Terrarium format)",
-	"https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png",
+typedef enum {
+	PROJECTION_SPHERICAL_MERCATOR = 0,
+	EPSG_3785 = 0
+} projection_t;
 
-	"aws:normal",
-	"Amazon AWS open elevation map (normal vector format)",
-	"https://s3.amazonaws.com/elevation-tiles-prod/normal/{z}/{x}/{y}.png",
+typedef struct {
+	const char* name;
+	const char* description;
+	const char* url;
+	projection_t projection;
+} tileset_t;
 
-	"gmaps",
-	"Google Maps standard road map",
-	"http://mt.google.com/vt/lyrs=m&x={x}&y={y}&z={z}",
+const tileset_t presets[] = {
+	{
+		"aws:terrarium",
+		"Amazon AWS open elevation map (Terrarium format)",
+		"https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png",
+		PROJECTION_SPHERICAL_MERCATOR
+	},
 
-	"gmaps:satellite",
-	"Google Maps satellite imagery",
-	"http://mt.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
+	{
+		"aws:normal",
+		"Amazon AWS open elevation map (normal vector format)",
+		"https://s3.amazonaws.com/elevation-tiles-prod/normal/{z}/{x}/{y}.png",
+		PROJECTION_SPHERICAL_MERCATOR
+	},
 
-	"gmaps:hybrid",
-	"Google Maps hybrid map",
-	"http://mt.google.com/vt/lyrs=y&x={x}&y={y}&z={z}",
+	{
+		"cartodb",
+		"CartoDB raster tiles",
+		"http://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png",
+		PROJECTION_SPHERICAL_MERCATOR
+	},
 
-	"ocm",
-	"OpenCycleMaps tiles (watermarked)",
-	"http://tile.thunderforest.com/cycle/{z}/{x}/{y}.png",
+	{
+		"cartodb:light",
+		"CartoDB light base map",
+		"http://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
+		PROJECTION_SPHERICAL_MERCATOR
+	},
 
-	"osm",
-	"OpenStreetMaps standard tiles",
-	"http://tile.openstreetmap.org/{z}/{x}/{y}.png",
+	{
+		"cartodb:dark",
+		"CartoDB dark base map",
+		"http://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+		PROJECTION_SPHERICAL_MERCATOR
+	},
 
-	"stamen:terrain",
-	"Stamen terrain tiles",
-	"http://tile.stamen.com/terrain/{z}/{x}/{y}.jpg",
+	{
+		"gmaps",
+		"Google Maps standard road map",
+		"http://mt.google.com/vt/lyrs=m&x={x}&y={y}&z={z}",
+		PROJECTION_SPHERICAL_MERCATOR
+	},
 
-	"stamen:toner",
-	"Stamen toner tiles",
-	"http://tile.stamen.com/toner/{z}/{x}/{y}.png",
+	{
+		"gmaps:satellite",
+		"Google Maps satellite imagery",
+		"http://mt.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
+		PROJECTION_SPHERICAL_MERCATOR
+	},
 
-	"stamen:watercolor",
-	"Stamen watercolor tiles",
-	"http://tile.stamen.com/watercolor/{z}/{x}/{y}.jpg",
+	{
+		"gmaps:hybrid",
+		"Google Maps hybrid map",
+		"http://mt.google.com/vt/lyrs=y&x={x}&y={y}&z={z}",
+		PROJECTION_SPHERICAL_MERCATOR
+	},
 
-	"tf:landscape",
-	"Thunderforest landscape map tiles (watermarked)",
-	"http://tile.thunderforest.com/landscape/{z}/{x}/{y}.png",
+	{
+		"ocm",
+		"OpenCycleMaps tiles (watermarked)",
+		"http://tile.thunderforest.com/cycle/{z}/{x}/{y}.png",
+		PROJECTION_SPHERICAL_MERCATOR
+	},
 
-	"tf:outdoors",
-	"Thunderforest outdoors map tiles (watermarked)",
-	"http://tile.thunderforest.com/outdoors/{z}/{x}/{y}.png",
+	{
+		"osm",
+		"OpenStreetMaps standard tiles",
+		"http://tile.openstreetmap.org/{z}/{x}/{y}.png",
+		PROJECTION_SPHERICAL_MERCATOR
+	},
 
-	"tf:transport",
-	"Thunderforest transport map tiles (watermarked)",
-	"http://tile.thunderforest.com/transport/{z}/{x}/{y}.png",
+	{
+		"stamen:terrain",
+		"Stamen terrain tiles",
+		"http://tile.stamen.com/terrain/{z}/{x}/{y}.jpg",
+		PROJECTION_SPHERICAL_MERCATOR
+	},
 
-	0
+	{
+		"stamen:toner",
+		"Stamen toner tiles",
+		"http://tile.stamen.com/toner/{z}/{x}/{y}.png",
+		PROJECTION_SPHERICAL_MERCATOR
+	},
+
+	{
+		"stamen:watercolor",
+		"Stamen watercolor tiles",
+		"http://tile.stamen.com/watercolor/{z}/{x}/{y}.jpg",
+		PROJECTION_SPHERICAL_MERCATOR
+	},
+
+	{
+		"tf:landscape",
+		"Thunderforest landscape map tiles (watermarked)",
+		"http://tile.thunderforest.com/landscape/{z}/{x}/{y}.png",
+		PROJECTION_SPHERICAL_MERCATOR
+	},
+
+	{
+		"tf:outdoors",
+		"Thunderforest outdoors map tiles (watermarked)",
+		"http://tile.thunderforest.com/outdoors/{z}/{x}/{y}.png",
+		PROJECTION_SPHERICAL_MERCATOR
+	},
+
+	{
+		"tf:transport",
+		"Thunderforest transport map tiles (watermarked)",
+		"http://tile.thunderforest.com/transport/{z}/{x}/{y}.png",
+		PROJECTION_SPHERICAL_MERCATOR
+	},
+
+	{ 0 }
 };
 
-const char* find_preset_url(const char* name, const char* default_url) {
-	for (const char** ptr = presets; *ptr != 0; ptr += 3) {
-		if (!strcmp(ptr[0], name)) {
-			return ptr[2];
-		}
+const char* format_projection(projection_t projection) {
+	switch (projection) {
+		case PROJECTION_SPHERICAL_MERCATOR:
+			return "EPSG:3857";
+
+		default:
+			return "unknown projection";
+	}
+}
+
+const tileset_t* find_preset_by_name(const char* name) {
+	if (name == 0) {
+		return 0;
 	}
 
-	return default_url;
+	for (const tileset_t* ptr = presets; ptr->name != 0; ptr++) {
+		if (!strcmp(ptr->name, name)) {
+			return ptr;
+		}
+	}
+	return 0;
 }
 
 void list_presets() {
-	for (const char** ptr = presets; *ptr != 0; ptr += 3) {
-		fprintf(stderr, "    %-20s %s\n", ptr[0], ptr[1]);
+	for (const tileset_t* ptr = presets; ptr->name != 0; ptr++) {
+		fprintf(stderr, "    %-20s %s\n", ptr->name, ptr->description);
 	}
 }
 
@@ -431,7 +516,8 @@ int main(int argc, char **argv) {
 
 			int opt;
 			for (opt = optind + 5; opt < argc; opt++) {
-				const char *url = find_preset_url(argv[opt], argv[opt]);
+				const tileset_t *preset = find_preset_by_name(argv[opt]);
+				const char *url = preset ? preset->url : argv[opt];
 				int end = strlen(url) + 50;
 				char url2[end];
 				const char *cp;
@@ -530,10 +616,11 @@ int main(int argc, char **argv) {
 						ioffset = (y * i->width + x) * i->depth;
 
 						if (i->depth == 4) {
+							/* RGBA image */
 							double as = buf[offset + 3] / 255.0;
 							double rs = buf[offset + 0] / 255.0 * as;
 							double gs = buf[offset + 1] / 255.0 * as;
-							double bs = buf[offset * 4 + 2] / 255.0 * as;
+							double bs = buf[offset + 2] / 255.0 * as;
 
 							double ad = i->buf[ioffset + 3] / 255.0;
 							double rd = i->buf[ioffset + 0] / 255.0 * ad;
@@ -635,8 +722,9 @@ int main(int argc, char **argv) {
 				perror(outfile);
 				exit(EXIT_FAILURE);
 			}
-		} else
+		} else {
 			fprintf(stderr, "Output PNG: stdout\n");
+		}
 		png_structp png_ptr;
 		png_infop info_ptr;
 
