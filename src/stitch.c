@@ -23,13 +23,13 @@
 typedef enum {
 	PROJECTION_SPHERICAL_MERCATOR = 0,
 	EPSG_3785 = 0
-} projection_t;
+} stitch_projection_t;
 
 typedef struct {
 	const char* name;
 	const char* description;
 	const char* url;
-	projection_t projection;
+	stitch_projection_t projection;
 } tileset_t;
 
 const tileset_t presets[] = {
@@ -148,7 +148,7 @@ const tileset_t presets[] = {
 	{ 0 }
 };
 
-const char* format_projection(projection_t projection) {
+const char* format_projection(stitch_projection_t projection) {
 	switch (projection) {
 		case PROJECTION_SPHERICAL_MERCATOR:
 			return "EPSG:3857";
